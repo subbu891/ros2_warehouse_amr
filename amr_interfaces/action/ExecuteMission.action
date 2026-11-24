@@ -1,0 +1,18 @@
+string mission_id
+
+# Ordered steps: goto:<station>, goto_pose:<x>,<y>,<yaw>, wait:<seconds>, dock:<dock_id>, undock
+string[] steps
+---
+bool success
+string message
+
+# Index of the failed step, -1 on success
+int32 failed_step
+float32 duration_s
+---
+int32 step_index
+string current_step
+
+# RUNNING, RETRYING or RECOVERING
+string status
+int32 attempt
