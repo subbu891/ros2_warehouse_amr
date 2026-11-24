@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
-<!-- Warehouse AMR: differential drive base, 2D lidar, IMU, optional RGB-D camera -->
 <robot name="amr" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
+  <!-- Build options -->
   <xacro:arg name="use_sim" default="true"/>
   <xacro:arg name="use_camera" default="false"/>
   <xacro:arg name="controllers_file" default=""/>
@@ -11,6 +11,7 @@
   <xacro:include filename="amr_sensors.xacro"/>
   <xacro:include filename="amr_ros2_control.xacro"/>
 
+  <!-- Robot assembly -->
   <xacro:amr_base/>
   <xacro:amr_lidar/>
   <xacro:amr_imu/>
@@ -19,7 +20,7 @@
   </xacro:if>
   <xacro:amr_ros2_control use_sim="$(arg use_sim)" controllers_file="$(arg controllers_file)"/>
 
-  <!-- Ground-truth odometry (world frame) for validation KPIs only, never used for control -->
+  <!-- Ground-truth odometry for validation KPIs only, never used for control -->
   <xacro:if value="$(arg use_sim)">
     <gazebo>
       <plugin filename="gz-sim-odometry-publisher-system" name="gz::sim::systems::OdometryPublisher">

@@ -10,6 +10,7 @@ def generate_launch_description():
     pkg = FindPackageShare("amr_description")
     use_camera = LaunchConfiguration("use_camera")
 
+    # Robot description from xacro, without simulation plugins
     robot_description = ParameterValue(
         Command([
             "xacro ", PathJoinSubstitution([pkg, "urdf", "amr.urdf.xacro"]),
@@ -18,6 +19,7 @@ def generate_launch_description():
         value_type=str,
     )
 
+    # Model viewer: state publisher, joint sliders and RViz
     return LaunchDescription([
         DeclareLaunchArgument("use_camera", default_value="false"),
         Node(package="robot_state_publisher", executable="robot_state_publisher",

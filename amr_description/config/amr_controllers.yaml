@@ -12,18 +12,22 @@ controller_manager:
 diff_drive_controller:
   ros__parameters:
     use_sim_time: true
+
+    # Wheel geometry, must match the URDF
     left_wheel_names: ["left_wheel_joint"]
     right_wheel_names: ["right_wheel_joint"]
     wheel_separation: 0.50
     wheel_radius: 0.08
 
+    # Odometry output; the EKF publishes the odom -> base_footprint transform
     odom_frame_id: odom
     base_frame_id: base_footprint
-    enable_odom_tf: false          # the EKF publishes odom -> base_footprint
+    enable_odom_tf: false
     publish_rate: 50.0
     pose_covariance_diagonal: [0.001, 0.001, 1000000.0, 1000000.0, 1000000.0, 0.01]
     twist_covariance_diagonal: [0.001, 0.001, 1000000.0, 1000000.0, 1000000.0, 0.01]
 
+    # Command timeout and velocity/acceleration limits
     cmd_vel_timeout: 0.5
     linear.x.max_velocity: 1.0
     linear.x.min_velocity: -0.5

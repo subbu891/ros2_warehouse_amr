@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Velocity command and position/velocity feedback per wheel -->
   <xacro:macro name="wheel_interfaces" params="joint">
     <joint name="${joint}">
       <command_interface name="velocity">
@@ -14,11 +16,11 @@
   <xacro:macro name="amr_ros2_control" params="use_sim controllers_file">
     <ros2_control name="AmrSystem" type="system">
       <hardware>
+        <!-- Gazebo hardware in simulation, mock hardware otherwise; replace with the motor driver on a real robot -->
         <xacro:if value="${use_sim}">
           <plugin>gz_ros2_control/GazeboSimSystem</plugin>
         </xacro:if>
         <xacro:unless value="${use_sim}">
-          <!-- Replace with your real motor driver plugin on hardware -->
           <plugin>mock_components/GenericSystem</plugin>
           <param name="calculate_dynamics">true</param>
         </xacro:unless>
@@ -27,6 +29,7 @@
       <xacro:wheel_interfaces joint="right_wheel_joint"/>
     </ros2_control>
 
+    <!-- Gazebo plugin that runs the controller manager inside the simulation -->
     <xacro:if value="${use_sim}">
       <gazebo>
         <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">

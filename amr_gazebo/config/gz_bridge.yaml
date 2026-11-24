@@ -1,10 +1,10 @@
-# ros_gz_bridge configuration. Check the Gazebo side with `gz topic -l` if a topic is silent.
 - ros_topic_name: "/clock"
   gz_topic_name: "/clock"
   ros_type_name: "rosgraph_msgs/msg/Clock"
   gz_type_name: "gz.msgs.Clock"
   direction: GZ_TO_ROS
 
+# Robot sensors
 - ros_topic_name: "/scan"
   gz_topic_name: "/scan"
   ros_type_name: "sensor_msgs/msg/LaserScan"
@@ -17,7 +17,7 @@
   gz_type_name: "gz.msgs.IMU"
   direction: GZ_TO_ROS
 
-# Ground truth for validation only (never fed into localization or control)
+# Ground truth for validation only, never used by localization or control
 - ros_topic_name: "/ground_truth/odom"
   gz_topic_name: "/ground_truth/odom"
   ros_type_name: "nav_msgs/msg/Odometry"

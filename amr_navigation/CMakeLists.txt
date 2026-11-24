@@ -3,6 +3,7 @@ project(amr_navigation)
 
 find_package(ament_cmake REQUIRED)
 
+# Install configuration, launch files and maps
 install(DIRECTORY config launch maps
   DESTINATION share/${PROJECT_NAME})
 

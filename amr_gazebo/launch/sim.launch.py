@@ -19,6 +19,7 @@ def generate_launch_description():
     x, y, yaw = LaunchConfiguration("x"), LaunchConfiguration("y"), LaunchConfiguration("yaw")
     use_camera = LaunchConfiguration("use_camera")
 
+    # Robot description with the Gazebo hardware plugin and controller config
     controllers = PathJoinSubstitution([desc_pkg, "config", "amr_controllers.yaml"])
     robot_description = ParameterValue(
         Command([
@@ -29,6 +30,7 @@ def generate_launch_description():
         value_type=str,
     )
 
+    # Gazebo with GUI, or server only for CI and low-memory machines
     gz_launch = PathJoinSubstitution([FindPackageShare("ros_gz_sim"), "launch", "gz_sim.launch.py"])
     gazebo_gui = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(gz_launch),
@@ -48,12 +50,14 @@ def generate_launch_description():
         output="screen",
     )
 
+    # Spawn the robot from the robot_description topic
     spawn = Node(
         package="ros_gz_sim", executable="create", output="screen",
         arguments=["-topic", "robot_description", "-name", "amr",
                    "-x", x, "-y", y, "-z", "0.02", "-Y", yaw],
     )
 
+    # Topic bridge between Gazebo and ROS 2
     bridge = Node(
         package="ros_gz_bridge", executable="parameter_bridge", output="screen",
         parameters=[{"config_file": PathJoinSubstitution([gz_pkg, "config", "gz_bridge.yaml"]),
@@ -73,5 +77,6 @@ def generate_launch_description():
         DeclareLaunchArgument("y", default_value="4.0"),
         DeclareLaunchArgument("yaw", default_value="0.0"),
         gazebo_gui, gazebo_headless, bridge, rsp, spawn,
+        # Controllers can only load after the robot and its ros2_control plugin exist
         RegisterEventHandler(OnProcessExit(target_action=spawn, on_exit=[jsb, ddc])),
     ])

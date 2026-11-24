@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
+  <!-- 360 degree 2D lidar, 10 Hz, 1 cm gaussian range noise -->
   <xacro:macro name="amr_lidar">
     <link name="laser_link">
       <visual><geometry><cylinder radius="0.05" length="0.06"/></geometry>
@@ -32,6 +33,7 @@
     </gazebo>
   </xacro:macro>
 
+  <!-- IMU at 50 Hz, the EKF uses its yaw rate -->
   <xacro:macro name="amr_imu">
     <link name="imu_link">
       <inertial><mass value="0.05"/><xacro:box_inertia m="0.05" x="0.02" y="0.02" z="0.01"/></inertial>
@@ -55,7 +57,7 @@
     </gazebo>
   </xacro:macro>
 
-  <!-- Optional RGB-D camera (off by default to keep the simulation fast) -->
+  <!-- Optional RGB-D camera, disabled by default to keep the simulation fast -->
   <xacro:macro name="amr_camera">
     <link name="camera_link">
       <visual><geometry><box size="0.03 0.1 0.03"/></geometry></visual>

@@ -1,3 +1,4 @@
+import subprocess
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -6,6 +7,7 @@ import yaml
 PKG = Path(__file__).resolve().parents[1]
 
 
+# Expand the xacro model and return the URDF XML tree
 def build_urdf(*args):
     out = subprocess.run(["xacro", str(PKG / "urdf" / "amr.urdf.xacro"), *args],
                          check=True, capture_output=True, text=True)
@@ -21,14 +23,16 @@ def test_urdf_builds_with_expected_links_and_joints():
     assert joints["left_wheel_joint"] == "continuous" and joints["right_wheel_joint"] == "continuous"
 
 
+# Gazebo silently drops links without inertia
 def test_every_link_has_inertia_except_frames():
     root = build_urdf("controllers_file:=/tmp/c.yaml")
     for link in root.iter("link"):
         if link.get("name") in ("base_footprint", "camera_optical_frame"):
             continue
-        assert link.find("inertial") is not None, f"{link.get('name')} has no inertial (Gazebo drops it)"
+        assert link.find("inertial") is not None, f"{link.get('name')} has no inertial"
 
 
+# A geometry mismatch with the controller config corrupts odometry
 def test_wheel_geometry_matches_controller_config():
     root = build_urdf("controllers_file:=/tmp/c.yaml")
     joints = {j.get("name"): j for j in root.findall("joint")}

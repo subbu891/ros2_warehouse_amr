@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
+  <!-- Driven wheel with continuous joint and high friction -->
   <xacro:macro name="wheel" params="side y_sign">
     <link name="${side}_wheel_link">
       <visual>
@@ -29,6 +30,7 @@
     </gazebo>
   </xacro:macro>
 
+  <!-- Frictionless caster so it never resists turning -->
   <xacro:macro name="caster" params="name x">
     <link name="${name}_caster_link">
       <visual><geometry><sphere radius="${caster_radius}"/></geometry></visual>
@@ -46,6 +48,7 @@
   </xacro:macro>
 
   <xacro:macro name="amr_base">
+    <!-- base_footprint lies on the ground, base_link sits at wheel axle height (REP 105) -->
     <link name="base_footprint"/>
 
     <link name="base_link">

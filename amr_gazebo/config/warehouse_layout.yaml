@@ -1,19 +1,9 @@
-# Single source of truth for the warehouse.
-# tools/generate_warehouse.py turns this file into:
-#   - amr_gazebo/worlds/warehouse.sdf            (simulation world)
-#   - amr_navigation/maps/warehouse.{pgm,yaml}   (reference map for AMCL)
-#   - amr_navigation/maps/keepout_mask.*         (Nav2 keepout filter)
-#   - amr_navigation/maps/speed_mask.*           (Nav2 speed filter)
-#   - amr_mission/config/stations.yaml           (named goals)
-#   - amr_navigation/config/docks.yaml           (docking database)
-# Units: metres, radians. The Gazebo world frame == the map frame.
-
 warehouse:
-  size: [20.0, 14.0]        # inner floor size (x, y); origin at the south-west corner
+  size: [20.0, 14.0]
   wall_thickness: 0.2
   wall_height: 2.5
 
-# Static obstacles: name, centre [x, y], size [sx, sy], height
+# Static obstacles: centre [x, y], footprint [sx, sy] and height in metres
 obstacles:
   - {name: rack_1,  center: [8.0, 4.0],   size: [8.0, 1.0], height: 2.0}
   - {name: rack_2,  center: [8.0, 7.0],   size: [8.0, 1.0], height: 2.0}
@@ -23,35 +13,38 @@ obstacles:
   - {name: pallets, center: [14.5, 2.0],  size: [1.2, 0.8], height: 1.0}
   - {name: charger_dock, center: [0.25, 2.0], size: [0.3, 0.6], height: 0.4}
 
-# Zones used by the Nav2 costmap filters
+# Areas the robot must never enter
 keepout_zones:
   - {name: office_walkway, min: [15.4, 8.6], max: [19.9, 10.1]}
 
-speed_zones:          # percent of max speed allowed inside the zone
+# Areas with a speed limit in percent of the maximum speed
+speed_zones:
   - {name: rack_aisles, min: [4.0, 4.5], max: [12.0, 9.5], percent: 50}
 
-# Named stations: [x, y, yaw]
+# Named goal poses [x, y, yaw] in the map frame
 stations:
   home:     [2.0, 4.0, 0.0]
   pickup_a: [2.5, 8.0, 0.0]
   drop_b:   [14.0, 5.5, 0.0]
   drop_c:   [17.5, 3.0, -1.5708]
 
+# Docking stations: robot base pose [x, y, yaw] when docked
 docks:
   charger:
     type: simple_charging_dock
-    pose: [0.75, 2.0, 3.14159]   # robot base pose when docked (facing the dock)
+    pose: [0.75, 2.0, 3.14159]
 
 robot_spawn: [2.0, 4.0, 0.0]
 
-# Moving obstacle that crosses the main east-west route
+# Moving obstacle crossing the main route
 forklift:
   size: [1.2, 0.8, 1.5]
   start: [13.0, 1.5]
   axis: y
-  travel: 7.5          # metres between turning points
-  speed: 0.5           # m/s
+  travel: 7.5
+  speed: 0.5
 
+# Occupancy map resolution and unknown border around the walls
 map:
   resolution: 0.05
-  padding: 1.0         # unknown border around the outer walls
+  padding: 1.0
