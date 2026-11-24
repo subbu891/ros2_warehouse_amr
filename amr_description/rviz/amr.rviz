@@ -1,0 +1,95 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Tool Properties
+    Name: Tool Properties
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: Grid
+      Enabled: true
+      Cell Size: 1
+      Plane Cell Count: 30
+    - Class: rviz_default_plugins/Map
+      Name: Map
+      Enabled: true
+      Topic:
+        Value: /map
+        Durability Policy: Transient Local
+    - Class: rviz_default_plugins/Map
+      Name: Global Costmap
+      Enabled: true
+      Color Scheme: costmap
+      Alpha: 0.4
+      Topic:
+        Value: /global_costmap/costmap
+    - Class: rviz_default_plugins/Map
+      Name: Local Costmap
+      Enabled: true
+      Color Scheme: costmap
+      Alpha: 0.6
+      Topic:
+        Value: /local_costmap/costmap
+    - Class: rviz_default_plugins/RobotModel
+      Name: RobotModel
+      Enabled: true
+      Description Topic:
+        Value: /robot_description
+    - Class: rviz_default_plugins/TF
+      Name: TF
+      Enabled: false
+    - Class: rviz_default_plugins/LaserScan
+      Name: LaserScan
+      Enabled: true
+      Size (m): 0.05
+      Color Transformer: FlatColor
+      Color: 255; 0; 0
+      Topic:
+        Value: /scan
+        Reliability Policy: Best Effort
+    - Class: rviz_default_plugins/Path
+      Name: Global Plan
+      Enabled: true
+      Color: 0; 120; 255
+      Topic:
+        Value: /plan
+    - Class: rviz_default_plugins/PoseArray
+      Name: AMCL Particles
+      Enabled: true
+      Topic:
+        Value: /particle_cloud
+        Reliability Policy: Best Effort
+    - Class: rviz_default_plugins/MarkerArray
+      Name: Safety Fields
+      Enabled: true
+      Topic:
+        Value: /safety/fields
+    - Class: rviz_default_plugins/MarkerArray
+      Name: Dynamic Obstacles
+      Enabled: true
+      Topic:
+        Value: /perception/obstacle_markers
+  Global Options:
+    Fixed Frame: map
+    Background Color: 48; 48; 48
+  Tools:
+    - Class: rviz_default_plugins/Interact
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/SetInitialPose
+      Topic:
+        Value: /initialpose
+    - Class: rviz_default_plugins/SetGoal
+      Topic:
+        Value: /goal_pose
+    - Class: rviz_default_plugins/PublishPoint
+  Views:
+    Current:
+      Class: rviz_default_plugins/TopDownOrtho
+      Name: Current View
+      Scale: 30
+      X: 10
+      Y: 7
+Window Geometry:
+  Width: 1400
+  Height: 900

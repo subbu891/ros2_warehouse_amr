@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<!-- Warehouse AMR: differential drive base, 2D lidar, IMU, optional RGB-D camera -->
+<robot name="amr" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:arg name="use_sim" default="true"/>
+  <xacro:arg name="use_camera" default="false"/>
+  <xacro:arg name="controllers_file" default=""/>
+
+  <xacro:include filename="amr_properties.xacro"/>
+  <xacro:include filename="amr_base.xacro"/>
+  <xacro:include filename="amr_sensors.xacro"/>
+  <xacro:include filename="amr_ros2_control.xacro"/>
+
+  <xacro:amr_base/>
+  <xacro:amr_lidar/>
+  <xacro:amr_imu/>
+  <xacro:if value="$(arg use_camera)">
+    <xacro:amr_camera/>
+  </xacro:if>
+  <xacro:amr_ros2_control use_sim="$(arg use_sim)" controllers_file="$(arg controllers_file)"/>
+
+  <!-- Ground-truth odometry (world frame) for validation KPIs only, never used for control -->
+  <xacro:if value="$(arg use_sim)">
+    <gazebo>
+      <plugin filename="gz-sim-odometry-publisher-system" name="gz::sim::systems::OdometryPublisher">
+        <odom_frame>map</odom_frame>
+        <robot_base_frame>base_footprint_gt</robot_base_frame>
+        <odom_topic>ground_truth/odom</odom_topic>
+        <odom_publish_frequency>20</odom_publish_frequency>
+        <dimensions>2</dimensions>
+      </plugin>
+    </gazebo>
+  </xacro:if>
+</robot>
