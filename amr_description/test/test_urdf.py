@@ -5,6 +5,7 @@ from pathlib import Path
 import yaml
 
 PKG = Path(__file__).resolve().parents[1]
+REPO = PKG.parent
 
 
 # Expand the xacro model and return the URDF XML tree
@@ -49,3 +50,13 @@ def test_wheel_geometry_matches_controller_config():
 def test_real_hardware_variant_has_no_gazebo_plugins():
     root = build_urdf("use_sim:=false")
     assert not any(p.get("filename", "").startswith("gz") for p in root.iter("plugin"))
+
+
+# The Nav2 footprint must cover the 0.60 m x 0.45 m body
+def test_nav2_footprint_covers_the_robot_body():
+    nav = yaml.safe_load((REPO / "amr_navigation" / "config" / "nav2_params.yaml").read_text())
+    for costmap in ("global_costmap", "local_costmap"):
+        fp = yaml.safe_load(nav[costmap][costmap]["ros__parameters"]["footprint"])
+        xs, ys = [p[0] for p in fp], [p[1] for p in fp]
+        assert max(xs) >= 0.30 and min(xs) <= -0.30
+        assert max(ys) >= 0.225 and min(ys) <= -0.225

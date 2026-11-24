@@ -1,9 +1,8 @@
 docks:
-- charger
-charger:
-  type: simple_charging_dock
-  frame: map
-  pose:
-  - 0.75
-  - 2.0
-  - 3.14159
+  charger:
+    type: simple_charging_dock
+    frame: map
+    pose:
+    - 0.75
+    - 2.0
+    - 3.14159

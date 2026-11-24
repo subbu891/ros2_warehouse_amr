@@ -1,0 +1,27 @@
+safety_monitor:
+  ros__parameters:
+    use_sim_time: true
+    base_frame: base_link
+    rate: 20.0
+    cmd_timeout: 0.5
+
+    # Robot footprint and field width
+    footprint_front: 0.30
+    footprint_rear: 0.30
+    footprint_half_width: 0.225
+    lateral_margin: 0.10
+
+    # Stopping model: reaction time and guaranteed deceleration
+    t_response: 0.15
+    a_brake: 1.0
+    protective_margin: 0.10
+
+    # Warning field and speed reduction
+    t_warning: 1.0
+    warning_margin: 0.30
+    min_speed_scale: 0.2
+
+    # Rotation field, restart delay and lidar watchdog
+    rotation_margin: 0.08
+    release_delay: 1.0
+    sensor_timeout: 0.5

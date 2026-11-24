@@ -227,9 +227,9 @@ def generate(layout_path: Path = DEFAULT_LAYOUT, repo: Path = REPO) -> dict:
     mission_cfg.mkdir(parents=True, exist_ok=True)
     (mission_cfg / "stations.yaml").write_text(yaml.safe_dump({"stations": stations}, sort_keys=False))
 
-    docks = {"docks": list(layout["docks"].keys())}
-    for name, d in layout["docks"].items():
-        docks[name] = {"type": d["type"], "frame": "map", "pose": d["pose"]}
+    # Dock database file format: docks is a map of dock name to its attributes
+    docks = {"docks": {name: {"type": d["type"], "frame": "map", "pose": d["pose"]}
+                       for name, d in layout["docks"].items()}}
     nav_cfg = repo / "amr_navigation" / "config"
     nav_cfg.mkdir(parents=True, exist_ok=True)
     (nav_cfg / "docks.yaml").write_text(yaml.safe_dump(docks, sort_keys=False))
