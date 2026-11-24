@@ -1,7 +1,3 @@
-"""EKF + slam_toolbox online async mapping. Drive around, then save the map:
-
-    ros2 run nav2_map_server map_saver_cli -f ~/warehouse_slam --ros-args -p use_sim_time:=true
-"""
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource

@@ -1,8 +1,3 @@
-"""Start Gazebo Harmonic with the warehouse, spawn the AMR and start its controllers.
-
-    ros2 launch amr_gazebo sim.launch.py               # with Gazebo GUI
-    ros2 launch amr_gazebo sim.launch.py headless:=true # server only (CI, low-RAM machines)
-"""
 from launch import LaunchDescription
 from launch.actions import (DeclareLaunchArgument, IncludeLaunchDescription,
                             RegisterEventHandler)
@@ -78,6 +73,5 @@ def generate_launch_description():
         DeclareLaunchArgument("y", default_value="4.0"),
         DeclareLaunchArgument("yaw", default_value="0.0"),
         gazebo_gui, gazebo_headless, bridge, rsp, spawn,
-        # Controllers can only load once the robot (and its gz_ros2_control plugin) exists
         RegisterEventHandler(OnProcessExit(target_action=spawn, on_exit=[jsb, ddc])),
     ])

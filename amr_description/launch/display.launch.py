@@ -1,4 +1,3 @@
-"""Show the AMR model in RViz with joint sliders (no simulation)."""
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import Command, LaunchConfiguration, PathJoinSubstitution

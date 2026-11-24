@@ -1,5 +1,3 @@
-"""The URDF must build and match the numbers the rest of the stack assumes."""
-import subprocess
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
