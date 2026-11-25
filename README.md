@@ -12,6 +12,22 @@ fleet interface over MQTT and an automated scenario test suite with measured KPI
 ![Gazebo warehouse](docs/images/gazebo.png)
 ![Navigation in RViz](docs/images/rviz_navigation.png)
 
+
+##Demo
+
+https://github.com/user-attachments/assets/d605b276-83c6-459d-b872-e516b6521da4
+
+https://github.com/user-attachments/assets/923c58af-1794-47bf-ac0c-b68c4eecc96d
+
+
+
+
+
+
+
+
+
+
 ## Architecture
 
 ```mermaid
