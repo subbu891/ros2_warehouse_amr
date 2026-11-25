@@ -1,0 +1,91 @@
+defaults:
+  timeout: 240.0
+
+  # Acceptance criteria that apply to every scenario unless overridden
+  checks:
+    min_clearance: 0.03
+    localization_rmse: 0.10
+    localization_max: 0.30
+
+# Each scenario: start pose [x, y, yaw], mission steps, expected outcome (success or any),
+# optional disturbances (events) and KPI limits (checks), written down before testing
+scenarios:
+  - name: nominal_transport
+    description: Pick at A, drop at B, return home. The everyday job.
+    start: [2.0, 4.0, 0.0]
+    steps: ["goto:pickup_a", "wait:2", "goto:drop_b", "wait:2", "goto:home"]
+    expect: success
+
+  - name: speed_zone
+    description: Drive through the rack aisle; speed must stay at or below 50 % of 0.8 m/s inside it.
+    start: [3.0, 5.5, 0.0]
+    steps: ["goto_pose:12.9,5.5,0.0"]
+    expect: success
+    checks:
+      max_speed_in_zone: {zone: rack_aisles, limit: 0.46}
+
+  - name: keepout_respect
+    description: The direct line crosses the office walkway; the robot must go around it.
+    start: [17.7, 7.8, 3.14159]
+    steps: ["goto_pose:14.5,11.5,1.5708"]
+    expect: success
+    checks:
+      keepout_violations: 0
+
+  - name: forklift_crossing
+    description: Shuttle across the forklift lane twice while the forklift moves.
+    start: [2.0, 4.0, 0.0]
+    forklift: true
+    steps: ["goto:drop_c", "goto:home", "goto:drop_c", "goto:home"]
+    expect: success
+    timeout: 420.0
+
+  - name: sudden_obstacle
+    description: A box appears 1.2 m in front of the moving robot. No contact allowed.
+    start: [3.0, 1.5, 0.0]
+    steps: ["goto_pose:12.0,1.5,0.0"]
+    expect: any
+    events:
+      - {type: spawn_box_ahead, when_x_gt: 6.0, distance: 1.2, size: [0.5, 0.5, 1.0]}
+
+  - name: emergency_stop
+    description: E-stop while driving; the robot must stop within its protective field, stay stopped and resume after reset.
+    start: [3.0, 1.5, 0.0]
+    steps: ["goto_pose:12.0,1.5,0.0"]
+    expect: success
+    events:
+      - {type: estop, at: 8.0, hold: 3.0}
+    checks:
+      stopping_distance: 0.40
+
+  # The start error is intentional, so the default localization limits are disabled
+  - name: localization_recovery
+    description: AMCL starts 0.4 m and 0.2 rad off; it must converge while driving.
+    start: [2.0, 4.0, 0.0]
+    initial_pose_error: [0.4, -0.3, 0.2]
+    steps: ["goto:pickup_a", "goto:home"]
+    expect: success
+    checks:
+      localization_rmse: null
+      localization_max: null
+      convergence_time: {threshold: 0.15, limit: 20.0}
+
+  - name: blocked_aisle_replan
+    description: An unmapped pallet blocks the middle aisle; the planner must find another way.
+    start: [3.0, 5.5, 0.0]
+    steps: ["goto_pose:12.9,5.5,0.0"]
+    expect: success
+    timeout: 300.0
+    events:
+      - {type: spawn_box, at: 0.0, pose: [8.0, 5.5], size: [1.2, 1.9, 1.0]}
+    checks:
+      max_speed_in_zone: null
+
+  - name: docking
+    description: Dock at the charger and undock again.
+    start: [2.0, 4.0, 0.0]
+    steps: ["dock:charger", "wait:2", "undock"]
+    expect: success
+    checks:
+      dock_error: {dock_pose: [0.75, 2.0, 3.14159], xy: 0.05, yaw: 0.05}
+      min_clearance: 0.0

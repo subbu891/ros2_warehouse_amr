@@ -43,6 +43,7 @@ def generate_launch_description():
             include("amr_navigation", "localization.launch.py", {"map": LaunchConfiguration("map")}),
             include("amr_navigation", "navigation.launch.py"),
             py_node("amr_perception", "obstacle_tracker", "obstacle_tracker"),
+            py_node("amr_perception", "dock_detector", "dock_detector"),
             py_node("amr_mission", "mission_executor", "mission_executor"),
             Node(package="amr_validation", executable="forklift_mover", name="forklift_mover",
                  parameters=[params, {"enabled": ParameterValue(forklift, value_type=bool)}],

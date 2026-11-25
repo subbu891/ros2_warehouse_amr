@@ -53,6 +53,7 @@ class SafetyNode(Node):
         self.create_subscription(Twist, "cmd_vel_smoothed", self.on_cmd, 10)
         self.create_subscription(Odometry, "odometry/filtered", self.on_odom, 10)
         self.create_subscription(Bool, "safety/estop", self.on_estop, 10)
+        self.create_subscription(Bool, "safety/docking_mode", self.on_docking_mode, 10)
 
         # Outputs: wheel command, safety state, field visualisation, e-stop reset
         self.cmd_pub = self.create_publisher(TwistStamped, "diff_drive_controller/cmd_vel", 10)
@@ -93,6 +94,11 @@ class SafetyNode(Node):
             self.get_logger().error("E-STOP pressed")
             self.monitor.press_estop()
 
+    def on_docking_mode(self, msg: Bool):
+        if msg.data != self.monitor.docking:
+            self.get_logger().info(f"docking field set {'on' if msg.data else 'off'}")
+            self.monitor.docking = msg.data
+
     def on_reset(self, _req, res):
         res.success = self.monitor.reset_estop()
         res.message = "e-stop reset" if res.success else "e-stop was not active"
@@ -111,7 +117,7 @@ class SafetyNode(Node):
         # Fields are sized for the larger of the requested and the measured speed
         v_field = max(cmd_v, self.measured_v, key=abs)
         ev = self.monitor.update(self.points, v_field, cmd_w, now)
-        v, w = limit_command(cmd_v, cmd_w, ev)
+        v, w = limit_command(cmd_v, cmd_w, ev, self.monitor.max_speed())
 
         out = TwistStamped()
         out.header.stamp = self.get_clock().now().to_msg()
@@ -141,7 +147,7 @@ class SafetyNode(Node):
 
     # Warning field in yellow, protective field in red; highlighted when active
     def publish_markers(self, ev):
-        cfg = self.monitor.cfg
+        cfg = self.monitor.active_config()
         hw = cfg.footprint_half_width + cfg.lateral_margin
         arr = MarkerArray()
         for i, (length, rgba) in enumerate([

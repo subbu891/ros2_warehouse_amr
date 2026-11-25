@@ -73,6 +73,8 @@ def test_masks_mark_the_zones():
     keepout = read_pgm(REPO / "amr_navigation" / "maps" / "keepout_mask.pgm")
     speed = read_pgm(REPO / "amr_navigation" / "maps" / "speed_mask.pgm")
     assert keepout[world_to_pixel(meta, keepout, 17.5, 9.3)] == 0
+    assert keepout[world_to_pixel(meta, keepout, 17.5, 8.4)] == 0
+    assert keepout[world_to_pixel(meta, keepout, 17.5, 8.1)] == 254
     assert keepout[world_to_pixel(meta, keepout, 2.0, 4.0)] == 254
     p = int(speed[world_to_pixel(meta, speed, 8.0, 5.5)])
     assert abs((255 - p) / 255 * 100 - 50) < 1.0

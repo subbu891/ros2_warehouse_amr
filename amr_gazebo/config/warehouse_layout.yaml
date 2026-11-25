@@ -13,7 +13,8 @@ obstacles:
   - {name: pallets, center: [14.5, 2.0],  size: [1.2, 0.8], height: 1.0}
   - {name: charger_dock, center: [0.25, 2.0], size: [0.3, 0.6], height: 0.4}
 
-# Areas the robot must never enter
+# Areas the robot must never enter; the mask adds keepout_margin so the whole body stays outside
+keepout_margin: 0.35
 keepout_zones:
   - {name: office_walkway, min: [15.4, 8.6], max: [19.9, 10.1]}
 

@@ -84,11 +84,13 @@ def build_occupancy(layout: dict, grid: Grid) -> np.ndarray:
     return img
 
 
-# Keepout mask: zones are lethal for the planner
+# Keepout mask: zones grown by keepout_margin are lethal, because the planner only keeps the robot centre out
 def build_keepout_mask(layout: dict, grid: Grid) -> np.ndarray:
     img = np.full((grid.height, grid.width), 254, dtype=np.uint8)
+    margin = layout.get("keepout_margin", 0.0)
     for z in layout.get("keepout_zones", []):
-        rs, cs = grid.box_slices(*z["min"], *z["max"])
+        rs, cs = grid.box_slices(z["min"][0] - margin, z["min"][1] - margin,
+                                 z["max"][0] + margin, z["max"][1] + margin)
         img[rs, cs] = 0
     return img
 

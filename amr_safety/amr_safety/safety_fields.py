@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 import numpy as np
 
@@ -27,6 +27,10 @@ class FieldConfig:
     rotation_margin: float = 0.08
     release_delay: float = 1.0
     sensor_timeout: float = 0.5
+
+    # Docking field set: short protective field, no warning field, limited speed
+    docking_margin: float = 0.02
+    docking_max_speed: float = 0.15
 
 
 @dataclass
@@ -128,6 +132,7 @@ def evaluate(points: np.ndarray, v: float, w: float, cfg: FieldConfig) -> Evalua
 class SafetyMonitor:
     cfg: FieldConfig = field(default_factory=FieldConfig)
     estop: bool = False
+    docking: bool = False
     _stopped_since_clear: float | None = None
     _latched: bool = False
     _last_scan_time: float | None = None
@@ -145,20 +150,31 @@ class SafetyMonitor:
     def scan_received(self, now: float) -> None:
         self._last_scan_time = now
 
+    # Field set switching: docking needs to approach the dock closer than the normal protective field allows
+    def active_config(self) -> FieldConfig:
+        if not self.docking:
+            return self.cfg
+        return replace(self.cfg, protective_margin=self.cfg.docking_margin,
+                       warning_margin=0.0, t_warning=0.0)
+
+    def max_speed(self) -> float:
+        return self.cfg.docking_max_speed if self.docking else math.inf
+
     def update(self, points: np.ndarray, v: float, w: float, now: float) -> Evaluation:
-        fields = compute_fields(v, self.cfg)
+        cfg = self.active_config()
+        fields = compute_fields(v, cfg)
         if self.estop:
             self.last = Evaluation(EMERGENCY_STOP, 0.0, math.inf, fields, "e-stop pressed")
             return self.last
 
         # Missing lidar data is treated as a protective stop
-        if self._last_scan_time is None or now - self._last_scan_time > self.cfg.sensor_timeout:
+        if self._last_scan_time is None or now - self._last_scan_time > cfg.sensor_timeout:
             self._latched = True
             self._stopped_since_clear = None
             self.last = Evaluation(PROTECTIVE_STOP, 0.0, math.inf, fields, "scan timeout")
             return self.last
 
-        ev = evaluate(points, v, w, self.cfg)
+        ev = evaluate(points, v, w, cfg)
         if ev.state == PROTECTIVE_STOP:
             self._latched = True
             self._stopped_since_clear = None
@@ -166,7 +182,7 @@ class SafetyMonitor:
             # Stay stopped until the field has been clear for release_delay seconds
             if self._stopped_since_clear is None:
                 self._stopped_since_clear = now
-            if now - self._stopped_since_clear < self.cfg.release_delay:
+            if now - self._stopped_since_clear < cfg.release_delay:
                 ev = Evaluation(PROTECTIVE_STOP, 0.0, ev.closest_distance, ev.fields, "release delay")
             else:
                 self._latched = False
@@ -175,10 +191,10 @@ class SafetyMonitor:
         return ev
 
 
-# Apply an evaluation to a velocity command
-def limit_command(v: float, w: float, ev: Evaluation) -> tuple[float, float]:
+# Apply an evaluation and an optional speed cap to a velocity command
+def limit_command(v: float, w: float, ev: Evaluation, max_speed: float = math.inf) -> tuple[float, float]:
     if ev.state in (PROTECTIVE_STOP, EMERGENCY_STOP):
         return 0.0, 0.0
     if ev.state == WARNING:
-        return v * ev.speed_scale, w
-    return v, w
+        v = v * ev.speed_scale
+    return float(np.clip(v, -max_speed, max_speed)), w

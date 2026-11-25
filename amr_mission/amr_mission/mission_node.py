@@ -15,6 +15,7 @@ from rclpy.action import ActionServer, CancelResponse, GoalResponse
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
+from std_msgs.msg import Bool
 
 from amr_mission.mission_logic import (MissionError, MissionRunner, Outcome, Pose2D, RetryPolicy,
                                        load_stations, parse_mission)
@@ -24,10 +25,14 @@ _RESULT = {TaskResult.SUCCEEDED: Outcome.SUCCEEDED, TaskResult.CANCELED: Outcome
 
 # Executor implementation on top of Nav2 through nav2_simple_commander
 class Nav2Executor:
-    def __init__(self, nav: BasicNavigator, logger, step_timeout: float, dock_type: str):
+    def __init__(self, nav: BasicNavigator, logger, step_timeout: float, dock_type: str,
+                 docks: dict[str, Pose2D], staging_offset: float, set_docking_mode):
         self.nav, self.log = nav, logger
         self.step_timeout = step_timeout
         self.dock_type = dock_type
+        self.docks = docks
+        self.staging_offset = staging_offset
+        self.set_docking_mode = set_docking_mode
         self.canceled = threading.Event()
 
     # Poll the running Nav2 task until it finishes, times out or is canceled
@@ -54,15 +59,33 @@ class Nav2Executor:
             return Outcome.FAILED
         return self._wait_task()
 
-    # Docking navigates to the staging pose first, then runs the docking controller
+    # Approach the staging pose with the normal safety fields, then dock with the docking field set
     def dock(self, dock_id: str) -> Outcome:
-        self.nav.dockRobotByID(dock_id, nav_to_dock=True)
-        return self._wait_task()
+        if dock_id not in self.docks:
+            self.log.error(f"unknown dock '{dock_id}'")
+            return Outcome.FAILED
+        d = self.docks[dock_id]
+        staging = Pose2D(d.x - self.staging_offset * math.cos(d.yaw),
+                         d.y - self.staging_offset * math.sin(d.yaw), d.yaw)
+        outcome = self.navigate(staging)
+        if outcome != Outcome.SUCCEEDED:
+            return outcome
+        self.set_docking_mode(True)
+        try:
+            time.sleep(0.5)
+            self.nav.dockRobotByID(dock_id, nav_to_dock=False)
+            return self._wait_task()
+        finally:
+            self.set_docking_mode(False)
 
     # The docking server aborts with success=true when the robot is not docked; nothing to undock counts as done
     def undock(self) -> Outcome:
-        self.nav.undockRobot(self.dock_type)
-        outcome = self._wait_task()
+        self.set_docking_mode(True)
+        try:
+            self.nav.undockRobot(self.dock_type)
+            outcome = self._wait_task()
+        finally:
+            self.set_docking_mode(False)
         if outcome == Outcome.FAILED and self._last_result_success():
             self.log.info("robot was not docked, undock not needed")
             return Outcome.SUCCEEDED
@@ -102,6 +125,14 @@ class MissionNode(Node):
         self.stations = load_stations(yaml.safe_load(Path(stations_file).read_text()))
         self.get_logger().info(f"stations: {sorted(self.stations)}")
 
+        # Dock poses from the docking database; the staging pose lies staging_offset in front of each dock
+        default_docks = str(Path(get_package_share_directory("amr_navigation")) / "config" / "docks.yaml")
+        docks_file = self.declare_parameter("docks_file", default_docks).value
+        self.staging_offset = self.declare_parameter("staging_offset", 0.7).value
+        docks = yaml.safe_load(Path(docks_file).read_text())["docks"]
+        self.docks = {name: Pose2D(*map(float, d["pose"])) for name, d in docks.items()}
+        self.docking_mode_pub = self.create_publisher(Bool, "safety/docking_mode", 10)
+
         # BasicNavigator is a separate node that spins itself while waiting for Nav2
         self.nav = BasicNavigator(node_name="mission_navigator")
         self.nav_ready = False
@@ -126,6 +157,9 @@ class MissionNode(Node):
             return GoalResponse.REJECT
         return GoalResponse.ACCEPT
 
+    def publish_docking_mode(self, on: bool):
+        self.docking_mode_pub.publish(Bool(data=on))
+
     def on_cancel(self, _goal_handle):
         if self.runner:
             self.runner.cancel()
@@ -142,7 +176,8 @@ class MissionNode(Node):
                 self.nav.waitUntilNav2Active(localizer="amcl")
                 self.nav_ready = True
 
-            self.executor_impl = Nav2Executor(self.nav, self.get_logger(), self.step_timeout, self.dock_type)
+            self.executor_impl = Nav2Executor(self.nav, self.get_logger(), self.step_timeout, self.dock_type,
+                                              self.docks, self.staging_offset, self.publish_docking_mode)
             self.runner = MissionRunner(self.executor_impl, RetryPolicy(self.max_attempts))
 
             def feedback(i, step, status, attempt):

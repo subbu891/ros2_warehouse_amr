@@ -17,5 +17,8 @@ setup(
     description="Lidar-based dynamic obstacle detection, tracking and motion prediction.",
     license="Apache-2.0",
     tests_require=["pytest"],
-    entry_points={"console_scripts": ["obstacle_tracker = amr_perception.obstacle_tracker_node:main"]},
+    entry_points={"console_scripts": [
+        "obstacle_tracker = amr_perception.obstacle_tracker_node:main",
+        "dock_detector = amr_perception.dock_detector_node:main",
+    ]},
 )

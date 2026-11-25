@@ -118,3 +118,25 @@ def test_estop_needs_explicit_reset():
     assert m.reset_estop() is True
     assert m.update(pts([10.0, 0.0]), 0.0, 0.0, 50.0).state == CLEAR
     assert m.reset_estop() is False
+
+
+# Docked, the dock face is 5 cm in front of the footprint
+def test_docking_mode_allows_the_final_approach():
+    dock_face = pts([CFG.footprint_front + 0.05, 0.0])
+    m = SafetyMonitor()
+    m.scan_received(0.0)
+    assert m.update(dock_face, 0.1, 0.0, 0.0).state == PROTECTIVE_STOP
+    m = SafetyMonitor(docking=True)
+    m.scan_received(0.0)
+    assert m.update(dock_face, 0.1, 0.0, 0.0).state == CLEAR
+
+
+def test_docking_mode_still_stops_at_contact_and_caps_speed():
+    m = SafetyMonitor(docking=True)
+    m.scan_received(0.0)
+    assert m.update(pts([CFG.footprint_front + 0.005, 0.0]), 0.1, 0.0, 0.0).state == PROTECTIVE_STOP
+    m = SafetyMonitor(docking=True)
+    m.scan_received(0.0)
+    clear = m.update(pts([5.0, 0.0]), 0.8, 0.0, 0.0)
+    assert limit_command(0.8, 0.2, clear, m.max_speed()) == (CFG.docking_max_speed, 0.2)
+    assert SafetyMonitor().max_speed() == math.inf
