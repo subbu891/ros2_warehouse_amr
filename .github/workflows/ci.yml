@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  # Pure-Python logic, lint and generated-file consistency; no ROS needed
+  unit-tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install pytest numpy pyyaml paho-mqtt xacro flake8
+      - name: Lint
+        run: flake8 --max-line-length 120 amr_*/amr_* amr_*/test tools tests
+      - name: Unit tests
+        run: python -m pytest
+
+  # Full ROS 2 Jazzy build and package tests
+  colcon-build-test:
+    runs-on: ubuntu-24.04
+    container: osrf/ros:jazzy-desktop
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: src/ros2_warehouse_amr
+      - name: Install dependencies
+        shell: bash
+        run: |
+          apt-get update
+          rosdep update
+          rosdep install --from-paths src --ignore-src -y
+      - name: Build
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          colcon build --event-handlers console_cohesion+
+      - name: Test
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          colcon test --event-handlers console_direct+
+          colcon test-result --verbose
