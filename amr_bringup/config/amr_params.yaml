@@ -49,6 +49,15 @@ obstacle_tracker:
     horizon: 2.0
     horizon_step: 0.25
 
+mission_executor:
+  ros__parameters:
+    use_sim_time: true
+
+    # Retries per step, timeout per step and the dock plugin used for undocking
+    max_attempts: 3
+    step_timeout: 180.0
+    dock_type: simple_charging_dock
+
 forklift_mover:
   ros__parameters:
     use_sim_time: true
