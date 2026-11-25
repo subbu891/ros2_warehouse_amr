@@ -4,6 +4,7 @@ from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
 
 
@@ -17,6 +18,7 @@ def generate_launch_description():
     params = PathJoinSubstitution([FindPackageShare("amr_bringup"), "config", "amr_params.yaml"])
     headless = LaunchConfiguration("headless")
     rviz = LaunchConfiguration("rviz")
+    forklift = LaunchConfiguration("forklift")
     nav_delay = LaunchConfiguration("nav_delay")
 
     def py_node(pkg, exe, name):
@@ -25,6 +27,7 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument("headless", default_value="false"),
         DeclareLaunchArgument("rviz", default_value="true"),
+        DeclareLaunchArgument("forklift", default_value="true"),
         DeclareLaunchArgument("map", default_value=PathJoinSubstitution(
             [FindPackageShare("amr_navigation"), "maps", "warehouse.yaml"])),
         DeclareLaunchArgument("nav_delay", default_value="8.0"),
@@ -33,10 +36,14 @@ def generate_launch_description():
         include("amr_gazebo", "sim.launch.py", {"headless": headless}),
         py_node("amr_safety", "safety_monitor", "safety_monitor"),
 
-        # Localization and navigation wait until Gazebo and the controllers are up
+        # Localization, navigation and perception wait until Gazebo and the controllers are up
         TimerAction(period=nav_delay, actions=[
             include("amr_navigation", "localization.launch.py", {"map": LaunchConfiguration("map")}),
             include("amr_navigation", "navigation.launch.py"),
+            py_node("amr_perception", "obstacle_tracker", "obstacle_tracker"),
+            Node(package="amr_validation", executable="forklift_mover", name="forklift_mover",
+                 parameters=[params, {"enabled": ParameterValue(forklift, value_type=bool)}],
+                 output="screen"),
         ]),
 
         Node(package="rviz2", executable="rviz2", output="log", condition=IfCondition(rviz),

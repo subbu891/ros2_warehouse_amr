@@ -25,3 +25,33 @@ safety_monitor:
     rotation_margin: 0.08
     release_delay: 1.0
     sensor_timeout: 0.5
+
+obstacle_tracker:
+  ros__parameters:
+    use_sim_time: true
+    map_frame: map
+
+    # Static map filter and clustering
+    static_dilation: 0.20
+    cluster_gap: 0.3
+    min_cluster_points: 3
+    max_range: 8.0
+
+    # Tracking: association gate, alpha-beta gains, confirmation and expiry
+    gate: 1.0
+    alpha: 0.5
+    beta: 0.3
+    confirm_hits: 3
+    max_age: 1.0
+
+    # Prediction of moving tracks
+    moving_speed: 0.15
+    horizon: 2.0
+    horizon_step: 0.25
+
+forklift_mover:
+  ros__parameters:
+    use_sim_time: true
+    speed: 0.5
+    min_y: 1.5
+    max_y: 9.0
