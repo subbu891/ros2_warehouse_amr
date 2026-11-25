@@ -19,6 +19,7 @@ def generate_launch_description():
     headless = LaunchConfiguration("headless")
     rviz = LaunchConfiguration("rviz")
     forklift = LaunchConfiguration("forklift")
+    vda = LaunchConfiguration("vda5050")
     nav_delay = LaunchConfiguration("nav_delay")
 
     def py_node(pkg, exe, name):
@@ -28,6 +29,7 @@ def generate_launch_description():
         DeclareLaunchArgument("headless", default_value="false"),
         DeclareLaunchArgument("rviz", default_value="true"),
         DeclareLaunchArgument("forklift", default_value="true"),
+        DeclareLaunchArgument("vda5050", default_value="false"),
         DeclareLaunchArgument("map", default_value=PathJoinSubstitution(
             [FindPackageShare("amr_navigation"), "maps", "warehouse.yaml"])),
         DeclareLaunchArgument("nav_delay", default_value="8.0"),
@@ -45,6 +47,9 @@ def generate_launch_description():
             Node(package="amr_validation", executable="forklift_mover", name="forklift_mover",
                  parameters=[params, {"enabled": ParameterValue(forklift, value_type=bool)}],
                  output="screen"),
+            # Fleet interface, needs a running MQTT broker
+            Node(package="amr_vda5050", executable="vda5050_adapter", name="vda5050_adapter",
+                 parameters=[params], output="screen", condition=IfCondition(vda)),
         ]),
 
         Node(package="rviz2", executable="rviz2", output="log", condition=IfCondition(rviz),

@@ -15,6 +15,7 @@
   <exec_depend>amr_safety</exec_depend>
   <exec_depend>amr_perception</exec_depend>
   <exec_depend>amr_mission</exec_depend>
+  <exec_depend>amr_vda5050</exec_depend>
   <exec_depend>amr_validation</exec_depend>
   <exec_depend>rviz2</exec_depend>
   <exec_depend>teleop_twist_keyboard</exec_depend>

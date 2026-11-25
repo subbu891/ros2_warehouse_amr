@@ -58,6 +58,25 @@ mission_executor:
     step_timeout: 180.0
     dock_type: simple_charging_dock
 
+vda5050_adapter:
+  ros__parameters:
+    use_sim_time: true
+
+    # Vehicle identity and MQTT broker
+    manufacturer: TUM-Student
+    serial_number: amr_001
+    broker_host: localhost
+    broker_port: 1883
+
+    # Topic layout uagv/v2/<manufacturer>/<serial>/<topic>
+    interface_name: uagv
+    major_version: v2
+
+    # State publishing and simulated battery
+    state_period: 1.0
+    map_id: warehouse
+    initial_battery: 90.0
+
 forklift_mover:
   ros__parameters:
     use_sim_time: true
